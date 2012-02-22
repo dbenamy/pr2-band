@@ -1,0 +1,41 @@
+<launch>
+
+  <include file="$(find pr2_machine)/$(env ROBOT).machine" />
+
+  <node name="dynparam" pkg="dynamic_reconfigure" type="dynparam" args="set_from_parameters prosilica_driver _trigger_mode:=streaming" />
+
+  <node name="prosilica" pkg="image_proc" type="image_proc" ns="prosilica" machine="c2"/>
+
+<!--  <node name="control_laser" pkg="perceive_poo" type="control_laser.py" output="screen" /> -->
+
+  <node name="perceive_poo" pkg="perceive_poo" type="perceive_poo" output="screen" machine="c2" >
+    <!--<param name="image_transport" value="compressed" />-->
+
+    <!-- To "calibrate": look at the RGB of the grass in an image, 
+    and use the rgb2hue.py utility to generate a value for grassHue. -->
+    <param name="grassHue" value="71" /> <!-- 71 -->
+
+    <!-- Used for filtering out specular reflections. -->
+    <param name="grassBrightness" value="110" />  <!-- 220 -->
+
+    <!-- Controls how tight the grass clasifier is. Larger values will 
+    label more pixels as grass. -->
+    <param name="grassThreshold" value="50" /> <!-- Value from thursady with Anthony 50 -->
+
+    <!-- Poo hue threshold. Larger values will label more pixels as poo. -->
+    <param name="pooThreshold" value="50" /> <!-- 50 -->
+
+    <!-- Not used as long as the transform calibration from the camera to 
+    the base is good. -->
+    <param name="robotHeight" value="1.5" />
+
+    <!--<remap from="image" to="wide_stereo/right/image_rect_color" /> -->
+    <remap from="image" to="/prosilica/image_rect_color" />
+
+    <!-- Mask grassy regions in the image. -->
+    <param name="maskGrass" value="false" />
+
+    <!-- Minimum poo size in pixels. -->
+    <param name="minPooSize" value="140" /> <!-- 180, 100 includes logs -->
+  </node>
+</launch>

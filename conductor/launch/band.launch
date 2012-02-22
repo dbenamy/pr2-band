@@ -1,0 +1,10 @@
+<launch>
+	<node pkg="conductor" type="pianist" name="pianist" output="screen"/>
+	<node pkg="conductor" type="drummer" name="drummer" output="screen"/>
+	<node pkg="sound_play" type="soundplay_node.py" name="play_sound" output="screen"/>
+	<!--<node pkg="conductor" type="send_song" name="conductor" output="screen"/>-->
+	<!--<node pkg="conductor" type="midi_player.py" args="ros $(find conductor)/src/herecomesthesun2.mid" name="midi_player" output="screen"/>-->
+
+	<include file="$(find pr2_arm_navigation_kinematics)/launch/pr2_ik_rarm_node.launch"/>
+	<include file="$(find pr2_arm_navigation_kinematics)/launch/pr2_ik_larm_node.launch"/>
+</launch>

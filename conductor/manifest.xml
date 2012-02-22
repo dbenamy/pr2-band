@@ -1,0 +1,25 @@
+<package>
+  <description brief="conductor">
+
+     conductor
+
+  </description>
+  <author>Benjamin Cohen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/conductor</url>
+
+  <depend package="roscpp" />
+  <depend package="trajectory_msgs" />
+  <depend package="std_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="pr2_controllers_msgs"/>
+  <depend package="actionlib"/>
+  <depend package="joint_trajectory_action" />
+<!--  <depend package="manipulation_srvs" />-->
+  <depend package="kinematics_msgs" />
+  <depend package="tf" />
+  <depend package="sound_play" />
+</package>
+
+

@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="pr2_impeded_joint_detector" pkg="pr2_impeded_joint_detector" type="impeded_joint_detector" output="screen">
+  	<rosparam command="load" file="$(find pr2_impeded_joint_detector)/launch/arm_controller_error_limits.yaml" /> 
+  </node>
+</launch>

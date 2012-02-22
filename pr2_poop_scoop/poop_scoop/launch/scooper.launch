@@ -1,0 +1,15 @@
+<launch>
+
+  <node pkg="poop_scoop" type="scooper" name="scooper" output="screen" >
+
+    <param name="arm_positions_filename" value="$(find poop_scoop)/motions/arm_positions.txt" />
+
+    <param name="open_scooper_position" value="0.66" />
+    <param name="open_scooper_effort" value="100" />
+
+    <param name="close_scooper_position" value="0.86" />
+    <param name="close_scooper_effort" value="-1" />
+ 
+  </node>
+
+</launch>

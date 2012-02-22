@@ -1,0 +1,48 @@
+<launch>
+  <!-- What does this do? it is necessary? -->
+  <include file="$(find pr2_machine)/pr2.machine" />
+
+  <!-- launch real-time controller for both hands -->
+  <include file="$(find poop_scoop)/launch/pr2_gripper_sensor_controller.launch" />
+
+  
+  <!-- Launch the left/right action server nodes -->
+  <group ns="r_gripper_sensor_controller">
+    <node name="gripper_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_sensor_action" />
+    <node name="findContact_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_findContact_action" />
+    <node name="slipServo_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_slipServo_action" />
+    <node name="forceServo_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_forceServo_action" />
+    <node name="event_detector_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_event_detector_action" />
+    <node name="grab_action_node" machine="c1"
+        pkg="pr2_gripper_sensor_action" type="pr2_gripper_grab_action" />
+    <node name="release_action_node" machine="c1"
+        pkg="pr2_gripper_sensor_action" type="pr2_gripper_release_action" />
+  </group>
+
+
+  <group ns="l_gripper_sensor_controller">
+    <node name="gripper_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_sensor_action" />
+    <node name="findContact_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_findContact_action" />
+    <node name="slipServo_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_slipServo_action" />
+    <node name="forceServo_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_forceServo_action" />
+    <node name="event_detector_action_node" machine="c1"
+          pkg="pr2_gripper_sensor_action" type="pr2_gripper_event_detector_action" />
+    <node name="grab_action_node" machine="c1"
+        pkg="pr2_gripper_sensor_action" type="pr2_gripper_grab_action" />
+    <node name="release_action_node" machine="c1"
+        pkg="pr2_gripper_sensor_action" type="pr2_gripper_release_action" />
+  </group>
+
+
+
+        
+</launch>

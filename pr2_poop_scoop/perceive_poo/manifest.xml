@@ -1,0 +1,22 @@
+<package>
+  <description brief="perceive_poo">
+
+     Dog poo perception and localization.
+
+  </description>
+  <author>Anthony Cowley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/perceive_poo</url>
+  <depend package="sensor_msgs"/>
+  <depend package="image_geometry"/>
+  <depend package="image_transport"/>
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="tf"/>
+  <depend package="image_view"/>
+  <depend package="visualization_msgs"/>
+
+</package>
+
+

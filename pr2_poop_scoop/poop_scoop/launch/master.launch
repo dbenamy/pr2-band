@@ -1,0 +1,19 @@
+<launch>
+
+  <include file="$(find poop_scoop)/launch/move_base.launch" />
+
+  <include file="$(find poop_scoop)/launch/scooper.launch" />
+
+  <include file="$(find pr2_arm_kinematics)/launch/pr2_ik_rarm_node.launch" />
+
+  <!-- luanch haptic sensing controllers -->
+  <include file="$(find poop_scoop)/launch/haptic_senses.launch" />
+  
+  <!-- launch haptic sensing nodes -->
+<!--  <node pkg="poop_scoop" name="gripper_scoop_service" type="gripper_scooper_controller_service.py" /> -->
+<node pkg="poop_scoop" name="haptic_poop_detector" type="haptic_poop_drop_checker.py" />
+
+  <node pkg="poop_scoop" name="amcl_pose_gossip" type="pose_gossip.py" />
+  <node pkg="poop_scoop" name="poop_perception_transformer" type="perception_transformer.py" /> 
+
+</launch>

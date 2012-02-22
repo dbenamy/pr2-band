@@ -1,0 +1,4 @@
+string action
+geometry_msgs/PoseStamped poop_location
+---
+uint8 result

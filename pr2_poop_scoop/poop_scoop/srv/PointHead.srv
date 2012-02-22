@@ -1,0 +1,3 @@
+geometry_msgs/Point location
+---
+uint8 result

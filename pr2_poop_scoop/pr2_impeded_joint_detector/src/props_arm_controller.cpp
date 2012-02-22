@@ -1,0 +1,76 @@
+// Joe Romano <joeromano@gmail.com>
+
+#include <pr2_impeded_joint_detector/props_arm_controller.h>
+
+PropsArmController::PropsArmController(ros::NodeHandle &n)
+{
+  right_arm = new Arm("right");
+  left_arm = new Arm("left");
+}
+
+PropsArmController::~PropsArmController()
+{
+  delete right_arm;
+  delete left_arm;
+}
+
+
+void PropsArmController::wiggle()
+{
+
+  // six randomly picked but pretty different trajectory setpoints
+  double r1[7] = {-0.64224744623000274, 0.29112660592839634, -0.34090880013920843, -1.889718976124994, -1.8887759329111, -1.246128394106234, 1.8114534061535377};
+  double r2[7] = {-0.8244761911806574, -0.35247156905029492, -0.45219504963990942, -1.1428468760973742, -1.1700785404087, -0.097275358876441675, 1.4661321268921341};
+  double r3[7] = {-0.33018693849830832, -0.33030769919692771, -2.0857296658699402, -0.96492367180701866, 1.05491017451882, -1.4483578547291476, 1.1756830265201081};
+  double r4[7] = {0.041732146965129835, -0.17355330668437302, 0.25561115395676848, -2.1219311971841726, 1.93574776751501, -0.09279394010618347, 0.1855160424626163};
+  double r5[7] = {-0.80432988316290988, 0.43823717720704308, -1.4027784603605951, -1.9499435920605417, -1.72958334173757, -1.9502767569980679, 0.6813256567794399};
+  double r6[7] = {-0.049465132127554434, 0.063143288161890951, -1.3545116576232592, -0.2695899450319349, -1.44162054289762, -0.64905548357949838, 1.3881190442282731};
+
+  double l1[7] = {0.32506249092297268, -0.0295516394248279, 0.30253510553097906, -1.3469511322318615, 1.98999163497126, -1.5074551714349753, -1.926577329454847};
+  double l2[7] = {-0.12851961263709644, 0.55618360815041612, 1.1147323010944528, -1.115607535440984, 1.27802005724112, -0.079405395926086642, 1.862706234748639};
+  double l3[7] = {0.24041483460149027, -0.352365865991427, 0.32290016847995462, -1.2141963898931665, -0.70932534543016, -0.0040659854517453, -1.087317319440899};
+  double l4[7] = {0.066891284473319046, 0.072216053069831018, 0.12935189305150208, -2.1206058138654336, -1.43553508289318, -0.31605041234778108, 0.727212026914714};
+  double l5[7] = {0.046662069838214526, 0.77393094022128239, -0.63794595112840358, -1.8811550572370788, 1.56169957953233, -1.37183786748454, -1.333900408783457};
+  double l6[7] = {-0.17129942719330105, 0.040577551828764997, 0.28874459046316892, -0.4037699475681783, 0.86944608210933, -1.3714462872036424, -2.727168517994613};
+
+
+  stdmat leftarm, rightarm;
+
+  rightarm.resize(6);
+  leftarm.resize(6);
+
+  resizeAndAssignTraj(r1,&rightarm[0],1.5);
+  resizeAndAssignTraj(r2,&rightarm[1],3.0);
+  resizeAndAssignTraj(r3,&rightarm[2],4.5);
+  resizeAndAssignTraj(r4,&rightarm[3],6.0);
+  resizeAndAssignTraj(r5,&rightarm[4],7.5);
+  resizeAndAssignTraj(r6,&rightarm[5],9.0);
+
+  resizeAndAssignTraj(l1,&leftarm[0],1.5);
+  resizeAndAssignTraj(l2,&leftarm[1],3.0);
+  resizeAndAssignTraj(l3,&leftarm[2],4.5);
+  resizeAndAssignTraj(l4,&leftarm[3],6.0);
+  resizeAndAssignTraj(l5,&leftarm[4],7.5);
+  resizeAndAssignTraj(l6,&leftarm[5],9.0);
+
+  left_arm->sendArmToConfiguration(leftarm,false);
+  right_arm->sendArmToConfiguration(rightarm,true);
+  
+}
+
+
+
+
+void PropsArmController::resizeAndAssignTraj(double *traj, std::vector<double> *mat, double time)
+{
+  (*mat).resize(8);
+  
+  for( int i = 0; i < 7; i++)
+    (*mat)[i] = traj[i];  
+  (*mat)[7] = time;
+}
+
+
+
+
+

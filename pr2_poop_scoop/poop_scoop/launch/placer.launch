@@ -1,0 +1,7 @@
+<launch>
+
+  <include file="$(find pr2_arm_kinematics)/launch/pr2_ik_rarm_node.launch" />
+  <include file="$(find pr2_impeded_joint_detector)/launch/pr2_impeded_joint_detector.launch" />
+  <node pkg="poop_scoop" type="scoop_placer" name="placer" output="screen" />
+
+</launch>
