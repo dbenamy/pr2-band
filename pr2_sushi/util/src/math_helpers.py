@@ -1,3 +1,6 @@
+from math import sqrt
+
+
 def dist_between(x1, y1, x2, y2):
     return sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
@@ -56,3 +59,17 @@ def calc_work_x_y_yaw(base_x_map, base_y_map, target_x_map, target_y_map, workin
     w_yaw = atan2(bt_dy, bt_dx)
     
     return w_x, w_y, w_yaw
+
+
+def calc_point_along_line(x1, y1, x2, y2, dist):
+    """Returns a point on the line through point1 and point2 which is dist
+    away from point 2 in the direction away from point 1. For example,
+    calc_point_along_line(0, 0, 10, 10, 1) will return approximately
+    (10.707 10.707).
+    
+    """
+    one_to_two_vector = (x2 - x1, y2 - y1)
+    magnitude = sqrt(one_to_two_vector[0] ** 2 + one_to_two_vector[1] ** 2)
+    unit_vector = (one_to_two_vector[0] / magnitude, one_to_two_vector[1] / magnitude)
+    dist_vector = (dist * unit_vector[0], dist * unit_vector[1])
+    return (x2 + dist_vector[0], y2 + dist_vector[1])
