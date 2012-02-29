@@ -1,8 +1,9 @@
 from threading import Lock
 
-import roslib; roslib.load_manifest('poop_scoop')
+import roslib; roslib.load_manifest('util')
 import rospy
 from rospy import loginfo, logwarn
+
 
 class SubscriptionBuffer:
     def __init__(self, topic, msg, blocking=True):
@@ -35,6 +36,7 @@ class SubscriptionBuffer:
             self._data = data
         finally:
             self._lock.release()
+
 
 if __name__ == '__main__':
     from sensor_msgs.msg import PointCloud

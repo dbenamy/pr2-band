@@ -20,6 +20,7 @@ from visualization_msgs.msg import Marker
 from tf import TransformListener
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
+from carrier import Carrier
 import poop_scoop.srv
 from subscription_buffer import SubscriptionBuffer
 
@@ -28,12 +29,6 @@ from haptic_poop_drop_checker import HapticPoopDropChecker
 RESENSE_TIMEOUT = 10.0
 WORKING_DIST_FROM_POOP = 0.58 #0.65  #0.55
 STAGE1_OFFSET = 0.15
-
-# map bounds
-MIN_X = 0.45
-MAX_X = 1.32 
-MIN_Y = -2.75
-MAX_Y = -0.84
 
 
 class Scooper():
@@ -88,49 +83,102 @@ def current_position(self):
 """
 
 
-def scoop_poops_and_go_back(base, scooper, poops):
-    """poops is a list of tuples (map_x, map_y)."""
-    for poop in poops:
-      if go_to_scoop_poop_at(base, poop[0], poop[1],0):
-          scooper.scoop()
-#    base.go_to_start()
+#def scoop_poops_and_go_back(base, scooper, poops):
+#    """poops is a list of tuples (map_x, map_y)."""
+#    for poop in poops:
+#      if go_to_scoop_poop_at(base, poop[0], poop[1],0):
+#          scooper.scoop()
+##    base.go_to_start()
 
 
-def get_lowest_2d_poop(points2d):
-    poops2d = [(p.x, p.y) for p in points if p.z != 25]
-    loginfo("Got the following 2d real poops: %s" % poops2d)
-    if len(poops2d) == 0:
-        return None
-    def get_row(poop2d):
-        return poop2d.y
-    poops2d.sort(key=get_row)
-    loginfo("Poops (map x, map y, distance) sorted by row: %s" % poops2d)
-    return poops2d[-1]
+#def get_lowest_2d_poop(points2d):
+#    poops2d = [(p.x, p.y) for p in points if p.z != 25]
+#    loginfo("Got the following 2d real poops: %s" % poops2d)
+#    if len(poops2d) == 0:
+#        return None
+#    def get_row(poop2d):
+#        return poop2d.y
+#    poops2d.sort(key=get_row)
+#    loginfo("Poops (map x, map y, distance) sorted by row: %s" % poops2d)
+#    return poops2d[-1]
 
+
+DIRTY_DROP_HEIGHT = 0.1
+
+
+def clean_table(base, head, carrier):
+    """Bring items 1 or 2 at a time to the dirty table."""
+    eating_table_corners = perception.eating_table_corners()
+    loginfo("Found eating table with corners " + eating_table_corners)
+    dirty_table_center = perception.dirty_table_center()
+    loginfo("Found dirty table with center " + dirty_table_center)
+    base_pose = plan_examine_surface_pose(base.get_pose(),
+                                          eating_table_corners)
+    loginfo("Moving to %s to examine the eating table better." % base_pose)
+    base.go_to_pose(base_pose)
+    dirty_objs = perception.objs_on_table(eating_table_corners)
+    loginfo("Found dirty objects on table: " + dirty_objs)
+    while len(dirty_objs) > 0:
+        pick_ups = plan_pickups(base_pose, dirty_objs)
+        loginfo("Decided on a pickup plan: " + pick_ups)
+        pick_up_pose = pick_ups[0][0]
+        loginfo("Moving to the first pickup point: " + pick_up_pose)
+        base.go_to_pose(pick_up_pose)
+        dirty_objs = perception.objs_on_table(eating_table_corners)
+        dirty_objs.sort() #TODO sort by dist from robot
+        loginfo("Updated list of dirty objects on the table. In distance "
+                "order: " + dirty_objs)
+        obj_type, obj_pose = dirty_objs[0]
+        loginfo("Picking up the nearest one.")
+        carrier.pick_up(obj_type, obj_pose, carrier.LEFT_HAND)
+        drop_off_pose = find_drop_off_pose(base_pose, dirty_table_center)
+        loginfo("Decided on a drop off pose of %s. Going there." %
+                drop_off_pose)
+        base.go_to_pose(drop_off_pose)
+        loginfo("For now, dropping stuff above the dirty table.")
+        drop_position = MapPosition(dirty_table_center.x, dirty_table_center.y,
+                                    dirty_table_center.z + DIRTY_DROP_HEIGHT)
+        carrier.put_down_obj_at(drop_position, carrier.LEFT_HAND)
+    loginfo("Done clearing the eating table.")
+
+
+def clean_table_with_bucket():
+    pass
+
+
+def plan_pickups(base_pose, pickup_objs):
+    """Returns a list of places to go and objects to pick up at each place, in
+    order of distance from current position. Something like:
+    [
+        (base pose, [
+            (obj type, pose),
+            ...
+        ]),
+        ...
+    ]
+    
+    """
+    pass
 
 
 def main():
     loginfo("Poop Scoop logic starting up.")
-    rospy.init_node('poop_scoop_behavior')
-    scooper = Scooper()
+    rospy.init_node('sushi_main')
+#    scooper = Scooper()
     base = Base()
     head = Head()
+    carrier = Carrier()
+    perception = Perception()
     sleep(1)
-    head.lookNear()
+    head.look_down()
    
-    def is_in_bounds(x,y):
-      if x < MIN_X or x > MAX_X:
-        return False
-      if y < MIN_Y or y > MAX_Y: 
-        return False
-      return True
-
     mode = sys.argv[1]
-    if mode == 'scoop':
-        scooper.tuck()
-        scooper.scoop()    
-    elif mode == 'reset_pose':
+    
+    # Base motion modes
+    if mode == 'reset_pose':
         base.reset_pose()
+    elif mode == 'go_to_start':
+        base.go_to_start()
     elif mode == 'go_to':
         x_map = float(sys.argv[2])
         y_map = float(sys.argv[3])
@@ -138,8 +186,61 @@ def main():
         if len(sys.argv) >= 5:
             yaw_map = float(sys.argv[4])
         base.go_to(x_map, y_map, yaw_map)
-    elif mode == 'go_to_start':
-        base.go_to_start()
+    
+    # Parts of behaviors for testing
+    #if mode == 'scoop':
+    #    scooper.tuck()
+    #    scooper.scoop()
+    #elif mode == 'go_to_poop':
+    #    x_map = float(sys.argv[2])
+    #    y_map = float(sys.argv[3])
+    #    go_to_scoop_poop_at(base, x_map, y_map,0)
+    #elif mode == 'scoop_poop':
+    #    x_map = float(sys.argv[2])
+    #    y_map = float(sys.argv[3])
+    #    go_to_scoop_poop_at(base, x_map, y_map,0)
+    #    scooper.scoop()
+    #elif mode == 'start_scoop':
+    #    scooper.start()
+    #elif mode == 'floor_scoop':
+    #    scooper.floor()
+    elif mode == 'look_down':
+        head.look_down()
+    elif mode == 'look_up':
+        head.look_up()
+    elif mode == 'talk':
+        speak("Clean up, clean up, everybody everywhere.")
+    elif mode in ['pregrasp', 'grasp', 'lift', 'pick_up']:
+        # All pose data is in the map frame
+        obj_id = int(sys.argv[2])
+        obj_pose = [float(x) for x in sys.argv[3:9]]
+        grasp_pose = get_grasp(obj_id, obj_pose)
+        pregrasp_pose = get_pregrasp_pose(obj_id, obj_pose, grasp_pose)
+        if mode == 'pregrasp':
+            carrier.gripper_to(pregrasp_pose, LEFT_HAND)
+        elif mode == 'grasp':
+            carrier.gripper_to(grasp_pose)
+            carrier.grasp(grasp_pose, LEFT_HAND)
+        elif mode == 'lift':
+            carrier.lift(grasp_pose, LEFT_HAND)
+        elif mode == 'pick_up': 
+            carrier.pregrasp(grasp_pose, LEFT_HAND)
+            carrier.grasp(grasp_pose, LEFT_HAND)
+            carrier.lift(grasp_pose, LEFT_HAND)
+    elif mode == 'put_down':
+        # Approximate position to put it since we won't take it's size or
+        # orientation into account for this.
+        x_map = float(sys.argv[2])
+        y_map = float(sys.argv[3])
+        z_map = float(sys.argv[4])
+        grasp_height = float(sys.argv[5])
+        left_arm.put_down_obj_at(x_map, y_map, z_map, grasp_height)
+    elif mode == 'drag_plate_to_edge':
+        drag_plate_to_edge(*sys.argv[2:])
+    
+    # Full task modes
+    elif mode == 'clean_table':
+        clean_table(head, base, carrier, perception)
     elif mode == 'v1':
         POOP = (6.065, 1.9)
         go_to_scoop_poop_at(base, POOP[0], POOP[1],0)
@@ -152,27 +253,7 @@ def main():
             (6.620, 4.657),
         ]
         scoop_poops_and_go_back(base, scooper, hall1_poops)
-    elif mode == 'go_to_poop':
-        x_map = float(sys.argv[2])
-        y_map = float(sys.argv[3])
-        go_to_scoop_poop_at(base, x_map, y_map,0)
-    elif mode == 'scoop_poop':
-        x_map = float(sys.argv[2])
-        y_map = float(sys.argv[3])
-        go_to_scoop_poop_at(base, x_map, y_map,0)
-        scooper.scoop()
     elif mode == 'v3':
-#        hall1_poops = [
-#            (5.644, 3.173),
-#            (6.065, 1.9),
-#            (6.620, 4.657),
-#        ]
-#        hall2_poops = [
-#            (24.7, 59.6),
-#            (23.2, 60.06),
-#            (22.9, 58.97),
-#            (25.2, 58.5),
-#        ]
         hall2_poops = [
             (1.357, -0.157),
 #            (23.2, 60.06),
@@ -247,7 +328,7 @@ def main():
             logerr("[stage 1] Sending poop to move_base.")
             if go_to_scoop_poop_at(base, closest[0], closest[1], STAGE1_OFFSET):
               visualize_base_ray()
-              head.lookNear() 
+              head.look_down() 
               sleep(0.5)
               while base._moving:
                 loginfo("\n[stage 2] Ignoring perception while I'm moving.\n")
@@ -322,23 +403,13 @@ def main():
  
                 loginfo("[resense] Reached goal. Starting scoop.");
                 scooper.scoop()
-                head.lookNear()
+                head.look_down()
             else:
               speak("Can't find the poop anymore.")
               logerr("Planning to poop failed.")
             sleep(5)
-            #head.lookFar()
+            #head.look_up()
             #sleep(10)
-    elif mode == 'start_scoop':
-        scooper.start()
-    elif mode == 'floor_scoop':
-        scooper.floor()
-    elif mode == 'look_near':
-        head.lookNear()
-    elif mode == 'look_far':
-        head.lookFar()
-    elif mode == 'hello':
-        speak("Hello! It's time for me to scoop some poop!")
 
 
 if __name__ == '__main__':

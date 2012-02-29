@@ -19,6 +19,7 @@ from tf import TransformListener
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 from util.srv import PointHead
+from util.utiltypes import MapPose
 
 
 class Head():
@@ -72,6 +73,10 @@ class Base():
     def get_yaw_map(self):
         self._wait_for_base_pose()
         return self._yaw_map
+    
+    def get_pose(self):
+        self._wait_for_base_pose()
+        return MapPose(self._x_map, self._y_map, 0, 0, 0, self._y_map)
     
     def _wait_for_base_pose(self):
         while self._x_map is None and not rospy.is_shutdown():
@@ -129,6 +134,11 @@ class Base():
         loginfo("At Goal: %i", self._at_goal)
         return self._at_goal
 
+    def go_to_pose(self, pose):
+        """Takes a MapPose."""
+        assert(issubclass(pose.__class__, MapPose))
+        return self.go_to(pose.x.val, pose.y.val, pose.yaw.val)
+    
     def go_to_start(self):
         self.go_to(self._start_x, self._start_y, self._start_yaw)
     
