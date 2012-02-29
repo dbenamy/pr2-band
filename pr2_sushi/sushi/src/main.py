@@ -91,23 +91,14 @@ def current_position(self):
 ##    base.go_to_start()
 
 
-#def get_lowest_2d_poop(points2d):
-#    poops2d = [(p.x, p.y) for p in points if p.z != 25]
-#    loginfo("Got the following 2d real poops: %s" % poops2d)
-#    if len(poops2d) == 0:
-#        return None
-#    def get_row(poop2d):
-#        return poop2d.y
-#    poops2d.sort(key=get_row)
-#    loginfo("Poops (map x, map y, distance) sorted by row: %s" % poops2d)
-#    return poops2d[-1]
-
-
+# To start with, we won't try to find free space on the dirty table to put
+# object onto. We'll just hold the obj DIRTY_DROP_HEIGHT over the middle of the
+# dirty table and let go.
 DIRTY_DROP_HEIGHT = 0.1
 
 
-def clean_table(base, head, carrier):
-    """Bring items 1 or 2 at a time to the dirty table."""
+def clean_table_v1(base, head, carrier):
+    """Bring items 1 at a time to the dirty table."""
     eating_table_corners = perception.eating_table_corners()
     loginfo("Found eating table with corners " + eating_table_corners)
     dirty_table_center = perception.dirty_table_center()
@@ -116,21 +107,27 @@ def clean_table(base, head, carrier):
                                           eating_table_corners)
     loginfo("Moving to %s to examine the eating table better." % base_pose)
     base.go_to_pose(base_pose)
-    dirty_objs = perception.objs_on_table(eating_table_corners)
-    loginfo("Found dirty objects on table: " + dirty_objs)
-    while len(dirty_objs) > 0:
-        pick_ups = plan_pickups(base_pose, dirty_objs)
+    objs = perception.objs_on_surface(eating_table_corners)
+    loginfo("Found dirty objects on table: " + objs)
+    while len(objs) > 0:
+        pick_ups = plan_pickups(base_pose, objs)
         loginfo("Decided on a pickup plan: " + pick_ups)
         pick_up_pose = pick_ups[0][0]
         loginfo("Moving to the first pickup point: " + pick_up_pose)
         base.go_to_pose(pick_up_pose)
-        dirty_objs = perception.objs_on_table(eating_table_corners)
-        dirty_objs.sort() #TODO sort by dist from robot
-        loginfo("Updated list of dirty objects on the table. In distance "
-                "order: " + dirty_objs)
-        obj_type, obj_pose = dirty_objs[0]
+        objs = perception.objs_on_surface(eating_table_corners)
+        objs_with_dists = []
+        for obj in objs:
+            dist = dist_between(obj.pose.x, obj.pose.y, base_pose.x,
+                                base_pose.y)
+            objs_with_dists.append((obj, dist))
+        def get_dist(obj_with_dist):
+            return obj_with_dist[1]
+        objs_with_dists.sort(key=get_dist)
+        loginfo("Updated list of dirty objects on the table: " +
+                objs_with_dists)
         loginfo("Picking up the nearest one.")
-        carrier.pick_up(obj_type, obj_pose, carrier.LEFT_HAND)
+        carrier.pick_up(objs_with_dists[0][0], carrier.LEFT_HAND)
         drop_off_pose = find_drop_off_pose(base_pose, dirty_table_center)
         loginfo("Decided on a drop off pose of %s. Going there." %
                 drop_off_pose)
@@ -142,7 +139,11 @@ def clean_table(base, head, carrier):
     loginfo("Done clearing the eating table.")
 
 
-def clean_table_with_bucket():
+def plan_examine_surface_pose(base_pose, surface_corners):
+    """Returns a base pose which is close to the surface so the robot can best
+    see what's on it. Only considers x and y.
+    
+    """
     pass
 
 

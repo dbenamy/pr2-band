@@ -82,7 +82,7 @@ class Base():
         while self._x_map is None and not rospy.is_shutdown():
             logerr("Poop scoop behavior hasn't gotten base pose data. "
                    "Please move the base.")
-            sleep(2)
+            sleep(1)
     
     def _amcl_pose_callback(self, data):
         self._x_map = data.pose.pose.position.x

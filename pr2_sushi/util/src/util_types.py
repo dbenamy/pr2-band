@@ -1,3 +1,6 @@
+from collections import namedtuple
+
+
 class MapFrameInt:
     """MapFrameInt acts more or less like an int, but represents a number in
     the map frame and can only be used automatically with other MapFrameInts.
@@ -51,3 +54,7 @@ class MapPose:
         self.roll = MapFrameInt(roll)
         self.pitch = MapFrameInt(pitch)
         self.yaw = MapFrameInt(yaw)
+
+
+# An Obj is a physical object in the world. We may need to add more fields.
+Obj = namedtuple(type, pose)

@@ -17,10 +17,18 @@ class Carrier:
     lifting and carrying.
     
     """
-    def pregrasp(self, x_map, y_map, z_map, hand):
-    def grasp
-    def lift
-    def pick_up
+    def pregrasp(self, obj, hand):
+        pass
+    
+    def grasp(self, obj, hand):
+        pass
+    
+    def lift(self, obj, hand):
+        pass
+    
+    def pick_up(self, obj, hand):
+        pass
+    
     def put_down_obj_at(self, x_map, y_map, z_map, hand,
                         grasp_height=None):
         self.move_tip_to(x_map, y_map, z_map + grasp_height) # TODO which way is z? Should it be -?
