@@ -169,7 +169,6 @@ def main():
     base = Base()
     head = Head()
     carrier = Carrier()
-    perception = Perception()
     sleep(1)
     head.look_down()
    
