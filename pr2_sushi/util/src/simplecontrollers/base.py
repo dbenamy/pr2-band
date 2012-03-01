@@ -1,7 +1,6 @@
 from math import atan2, pi, sqrt
 import sys
 from time import sleep
-from os import system
 
 import roslib; roslib.load_manifest('util')
 from actionlib import SimpleActionClient
@@ -18,25 +17,7 @@ from visualization_msgs.msg import Marker
 from tf import TransformListener
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
-from util.srv import PointHead
 from util.utiltypes import MapPose
-
-
-class Head():
-    def __init__(self):
-        SERVICE = 'point_head'
-        loginfo("Waiting for %s service." % SERVICE)
-#        rospy.wait_for_service(SERVICE)
-        self._head = rospy.ServiceProxy(SERVICE, PointHead)
-        loginfo("Connected to %s service." % SERVICE)
-    
-    def look_far(self):
-        loginfo("Looking far away.")
-        self._head(location=Point(1.0, 0.25, 0))
-    
-    def look_near(self):
-        loginfo("Looking near by.")
-        self._head(location=Point(0.4, 0, 0))
 
 
 class Base():
@@ -151,8 +132,3 @@ class Base():
         orientation.z = q[2]
         orientation.w = q[3]
         return Pose(position=position, orientation=orientation)
-
-
-def speak(text):
-    cmd = "echo \"" + text + "\" | festival --tts"
-    system(cmd)

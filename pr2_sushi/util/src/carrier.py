@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""This module handles 2 arm coordination and other tasks associates with
+lifting and carrying.
+
+"""
 
 # I was thinking about making this a separate node so it could keep state across
 # runs of main, but that's probably more trouble than it's worth.
@@ -12,27 +16,22 @@ RIGHT_HAND = 'RIGHT_HAND'
 BOTH_HANDS = 'BOTH_HANDS'
 
 
-class Carrier:
-    """This class handles 2 arm coordination and other tasks associates with
-    lifting and carrying.
-    
-    """
-    def pregrasp(self, obj, hand):
-        pass
-    
-    def grasp(self, obj, hand):
-        pass
-    
-    def lift(self, obj, hand):
-        pass
-    
-    def pick_up(self, obj, hand):
-        pass
-    
-    def put_down_obj_at(self, x_map, y_map, z_map, hand,
-                        grasp_height=None):
-        self.move_tip_to(x_map, y_map, z_map + grasp_height) # TODO which way is z? Should it be -?
-        self.open_gripper()
+def pregrasp(self, obj, hand):
+    pass
+
+def grasp(self, obj, hand):
+    pass
+
+def lift(self, obj, hand):
+    pass
+
+def pick_up(self, obj, hand):
+    pass
+
+def put_down_obj_at(self, x_map, y_map, z_map, hand,
+                    grasp_height=None):
+    self.move_tip_to(x_map, y_map, z_map + grasp_height) # TODO which way is z? Should it be -?
+    self.open_gripper()
 
 
 #def main():

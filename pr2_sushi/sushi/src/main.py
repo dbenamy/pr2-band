@@ -20,7 +20,8 @@ from visualization_msgs.msg import Marker
 from tf import TransformListener
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
-from carrier import Carrier
+from util.simplecontrollers import base, head, speech
+from carrier import pregrasp, grasp, lift, pick_up, put_down
 import poop_scoop.srv
 from subscription_buffer import SubscriptionBuffer
 
@@ -103,8 +104,7 @@ def clean_table_v1(base, head, carrier):
     loginfo("Found eating table with corners " + eating_table_corners)
     dirty_table_center = perception.dirty_table_center()
     loginfo("Found dirty table with center " + dirty_table_center)
-    base_pose = plan_examine_surface_pose(base.get_pose(),
-                                          eating_table_corners)
+    base_pose = plan_examine_surface(base.get_pose(), eating_table_corners)
     loginfo("Moving to %s to examine the eating table better." % base_pose)
     base.go_to_pose(base_pose)
     objs = perception.objs_on_surface(eating_table_corners)
@@ -139,33 +139,9 @@ def clean_table_v1(base, head, carrier):
     loginfo("Done clearing the eating table.")
 
 
-def plan_examine_surface_pose(base_pose, surface_corners):
-    """Returns a base pose which is close to the surface so the robot can best
-    see what's on it. Only considers x and y.
-    
-    """
-    pass
-
-
-def plan_pickups(base_pose, pickup_objs):
-    """Returns a list of places to go and objects to pick up at each place, in
-    order of distance from current position. Something like:
-    [
-        (base pose, [
-            (obj type, pose),
-            ...
-        ]),
-        ...
-    ]
-    
-    """
-    pass
-
-
 def main():
     loginfo("Poop Scoop logic starting up.")
     rospy.init_node('sushi_main')
-#    scooper = Scooper()
     base = Base()
     head = Head()
     carrier = Carrier()
