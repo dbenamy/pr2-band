@@ -78,7 +78,10 @@ def calc_work_x_y_yaw(base_x_map, base_y_map, target_x_map, target_y_map, workin
 
 
 def calc_work_pose(base, obj, working_dist):
-    """Same as calc_work_x_y_yaw but takes and returns MapPoses."""
+    """Same as calc_work_x_y_yaw but takes MapPositions or MapPoses and returns
+    a MapPose.
+    
+    """
 #    if not issubtype(base.__class__, MapVal):
 #        raise TypeError()
 #    if not issubtype(obj.__class__, MapVal):

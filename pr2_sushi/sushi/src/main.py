@@ -162,26 +162,23 @@ def find_closest_obj(objs):
     return objs_with_dists[0]
 
 
-def get_within_working_dist(obj):
-    if dist_between(base.get_pose(), obj.pose) <= MAX_WORK_DIST:
+def get_within_working_dist(pos):
+    """Takes a position or pose."""
+    if dist_between(base.get_pose(), pos) <= MAX_WORK_DIST:
         loginfo("Already within working dist of: " + obj)
         return
-    desired_pose = calc_work_pose(base.get_pose(), obj.pose, WORK_DIST)
+    desired_pose = calc_work_pose(base.get_pose(), pos, WORK_DIST)
     dest_pose = find_nearest_valid_pose(desired_pose)
-    loginfo("Moving to within working dist of: " + obj)
+    loginfo("Moving to within working dist of: " + pose)
     base.go_to_pose(dest_pose)
 
 
 def go_to_dirty_table():
     dirty_table_center = perception.dirty_table_center()
     loginfo("Found dirty table with center " + dirty_table_center)
-    desired_pose = calc_work_pose(base.get_pose(), dirty_table_center,
-                                  WORK_DIST)
-    dest_pose = find_nearest_valid_pose(desired_pose)
-    loginfo("Decided on a drop off pose of %s. Going there." % dest_pose)
-    base.go_to_pose(dest_pose)
+    get_within_working_dist(dirty_table_center)
 
-
+    
 def find_nearest_valid_pose(pose):
     # TODO Sachin
     return pose
@@ -212,48 +209,39 @@ def main():
         base.go_to(x_map, y_map, yaw_map)
     
     # Parts of behaviors for testing
-    elif mode == 'get_within_working_dist':
-        # All pose data is in the map frame
-        obj_id = int(sys.argv[2])
-        obj_type = obj_db.by_id(obj_id).type
-        obj_pose = [float(x) for x in sys.argv[3:9]]
-        obj = Obj(obj_type, obj_pose)
-        get_within_working_dist(obj)
-    elif mode == 'pick_up_obj':
-        # All pose data is in the map frame
-        obj_id = int(sys.argv[2])
-        obj_type = obj_db.by_id(obj_id).type
-        obj_pose = [float(x) for x in sys.argv[3:9]]
-        obj = Obj(obj_type, obj_pose)
-        get_within_working_dist(obj)
-        carrier.pick_up(closest_obj, carrier.LEFT_HAND)
     elif mode == 'look_down':
         head.look_down()
     elif mode == 'look_up':
         head.look_up()
     elif mode == 'talk':
         speak("Clean up, clean up, everybody everywhere.")
-    elif mode in ['pregrasp', 'grasp', 'lift', 'pick_up']:
-        # All pose data is in the map frame
+    elif mode == 'get_within_working_dist':
+        obj = parse_obj_args(sys.argv[2:])
+        get_within_working_dist(obj.pose)
+    elif mode == 'pregrasp':
+        obj = parse_obj_args(sys.argv[2:])
+        carrier.pregrasp(obj, LEFT_HAND)
+    elif mode == 'grasp':
+        obj = parse_obj_args(sys.argv[2:])
+        carrier.grasp(obj, LEFT_HAND)
+    elif mode == 'lift':
+        obj = parse_obj_args(sys.argv[2:])
+        carrier.lift(obj, LEFT_HAND)
+    elif mode == 'pick_up':
+        obj = parse_obj_args(sys.argv[2:])
+        carrier.pick_up(obj, LEFT_HAND)
+    elif mode == 'go_and_pick_up':
+        obj = parse_obj_args(sys.argv[2:])
+        get_within_working_dist(obj.pose)
+        carrier.pick_up(obj, LEFT_HAND)
+    elif mode == 'go_and_put_down':
         obj_id = int(sys.argv[2])
-        obj_pose = [float(x) for x in sys.argv[3:9]]
-        grasp_pose = get_grasp(obj_id, obj_pose)
-        pregrasp_pose = get_pregrasp_pose(obj_id, obj_pose, grasp_pose)
-        # TODO reconcile carrier interface differences with clean_table
-        if mode == 'pregrasp':
-            carrier.gripper_to(pregrasp_pose, LEFT_HAND)
-        elif mode == 'grasp':
-            carrier.gripper_to(grasp_pose)
-            carrier.grasp(grasp_pose, LEFT_HAND)
-        elif mode == 'lift':
-            carrier.lift(grasp_pose, LEFT_HAND)
-        elif mode == 'pick_up':
-            carrier.pick_up(grasp_pose, LEFT_HAND)
-    elif mode == 'put_down':
-        obj_id = int(sys.argv[2])
-        obj_position = MapPosition(*[float(x) for x in sys.argv[3:6]])
-        grasp_height = get_grasp_to_surface_height(obj_id)
-        carrier.put_down(obj_position, grasp_height)
+        x, y, z = [float(x) for x in sys.argv[3:6]]
+        obj_type = obj_db.by_id(obj_id).type
+        dummy_pose = MapPose(0, 0, 0, 0, 0, 0)
+        obj = Obj(obj_type, dummy_pose)
+        dest = MapPosition(x, y, z)
+        carrier.put_down(obj, dest, LEFT_HAND)
     elif mode == 'drag_plate_to_edge':
         drag_plate_to_edge(*sys.argv[2:])
     
@@ -429,6 +417,14 @@ def main():
             sleep(5)
             #head.look_up()
             #sleep(10)
+
+
+def parse_obj_args(obj_command_line_args):
+    # All pose data is in the map frame
+    obj_id = int(obj_command_line_args[0])
+    obj_type = obj_db.by_id(obj_id).type
+    obj_pose = [float(x) for x in obj_command_line_args[1:7]]
+    return Obj(obj_type, obj_pose)
 
 
 if __name__ == '__main__':

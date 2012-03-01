@@ -17,16 +17,20 @@ BOTH_HANDS = 'BOTH_HANDS'
 
 
 def pregrasp(self, obj, hand):
-    pass
+    pregrasp_pose = get_pregrasp_pose(obj.type, obj.pose)
+    carrier.gripper_to(pregrasp_pose, hand)
 
 def grasp(self, obj, hand):
-    pass
+    grasp_pose = get_pregrasp_pose(obj.type, obj.pose)
+    carrier.gripper_to(grasp_pose, hand)
 
 def lift(self, obj, hand):
     pass
 
 def pick_up(self, obj, hand):
-    pass
+    pregrasp(obj, hand)
+    grasp(obj, hand)
+    lift(obj, hand)
 
 def put_down_obj_at(self, x_map, y_map, z_map, hand,
                     grasp_height=None):

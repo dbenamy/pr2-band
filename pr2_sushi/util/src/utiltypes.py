@@ -54,4 +54,5 @@ class MapPose:
 
 
 # An Obj is a physical object in the world. We may need to add more fields.
+# A position of 0. 0. 0 should be near the center of the object.
 Obj = namedtuple(type, pose)
