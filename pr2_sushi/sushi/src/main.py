@@ -212,22 +212,21 @@ def main():
         base.go_to(x_map, y_map, yaw_map)
     
     # Parts of behaviors for testing
-    #if mode == 'scoop':
-    #    scooper.tuck()
-    #    scooper.scoop()
-    #elif mode == 'go_to_poop':
-    #    x_map = float(sys.argv[2])
-    #    y_map = float(sys.argv[3])
-    #    go_to_scoop_poop_at(base, x_map, y_map,0)
-    #elif mode == 'scoop_poop':
-    #    x_map = float(sys.argv[2])
-    #    y_map = float(sys.argv[3])
-    #    go_to_scoop_poop_at(base, x_map, y_map,0)
-    #    scooper.scoop()
-    #elif mode == 'start_scoop':
-    #    scooper.start()
-    #elif mode == 'floor_scoop':
-    #    scooper.floor()
+    elif mode == 'get_within_working_dist':
+        # All pose data is in the map frame
+        obj_id = int(sys.argv[2])
+        obj_type = obj_db.by_id(obj_id).type
+        obj_pose = [float(x) for x in sys.argv[3:9]]
+        obj = Obj(obj_type, obj_pose)
+        get_within_working_dist(obj)
+    elif mode == 'pick_up_obj':
+        # All pose data is in the map frame
+        obj_id = int(sys.argv[2])
+        obj_type = obj_db.by_id(obj_id).type
+        obj_pose = [float(x) for x in sys.argv[3:9]]
+        obj = Obj(obj_type, obj_pose)
+        get_within_working_dist(obj)
+        carrier.pick_up(closest_obj, carrier.LEFT_HAND)
     elif mode == 'look_down':
         head.look_down()
     elif mode == 'look_up':
@@ -240,6 +239,7 @@ def main():
         obj_pose = [float(x) for x in sys.argv[3:9]]
         grasp_pose = get_grasp(obj_id, obj_pose)
         pregrasp_pose = get_pregrasp_pose(obj_id, obj_pose, grasp_pose)
+        # TODO reconcile carrier interface differences with clean_table
         if mode == 'pregrasp':
             carrier.gripper_to(pregrasp_pose, LEFT_HAND)
         elif mode == 'grasp':
@@ -247,18 +247,13 @@ def main():
             carrier.grasp(grasp_pose, LEFT_HAND)
         elif mode == 'lift':
             carrier.lift(grasp_pose, LEFT_HAND)
-        elif mode == 'pick_up': 
-            carrier.pregrasp(grasp_pose, LEFT_HAND)
-            carrier.grasp(grasp_pose, LEFT_HAND)
-            carrier.lift(grasp_pose, LEFT_HAND)
+        elif mode == 'pick_up':
+            carrier.pick_up(grasp_pose, LEFT_HAND)
     elif mode == 'put_down':
-        # Approximate position to put it since we won't take it's size or
-        # orientation into account for this.
-        x_map = float(sys.argv[2])
-        y_map = float(sys.argv[3])
-        z_map = float(sys.argv[4])
-        grasp_height = float(sys.argv[5])
-        left_arm.put_down_obj_at(x_map, y_map, z_map, grasp_height)
+        obj_id = int(sys.argv[2])
+        obj_position = MapPosition(*[float(x) for x in sys.argv[3:6]])
+        grasp_height = get_grasp_to_surface_height(obj_id)
+        carrier.put_down(obj_position, grasp_height)
     elif mode == 'drag_plate_to_edge':
         drag_plate_to_edge(*sys.argv[2:])
     
