@@ -1,4 +1,5 @@
 import roslib; roslib.load_manifest('util')
+from visualization_msgs.msg import Marker
 
 
 viz_pub = rospy.Publisher("visualization_marker", Marker)

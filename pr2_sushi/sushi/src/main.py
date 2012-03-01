@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 
+"""This module implements some baseline behaviors for the sushi tasks. If you
+want to experiment with other ideas there are a few intended places to do so.
+If you want to replace the placeholder perception, TODO
+If you want to replace the high level behavior functions, you should probably
+write your own versions of function like clean_table().
+
+"""
+
 from math import atan2, pi, sqrt
 import sys
 from time import sleep
 from os import system
-import roslib; roslib.load_manifest('poop_scoop')
+import roslib; roslib.load_manifest('sushi')
 
-from actionlib import SimpleActionClient
-from actionlib_msgs.msg import GoalStatusArray
 from geometry_msgs.msg import (Point, PointStamped, Point32, Pose, PoseStamped,
                                PoseWithCovariance, PoseWithCovarianceStamped,
                                Quaternion, Vector3)
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import rospy
 from rospy import logerr, loginfo, Time
 from sensor_msgs.msg import ChannelFloat32, PointCloud
 from std_msgs.msg import Header, ColorRGBA
-from visualization_msgs.msg import Marker
-from tf import TransformListener
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 from util.simplecontrollers import base, head, speech
 from carrier import pregrasp, grasp, lift, pick_up, put_down
@@ -27,9 +29,14 @@ from subscription_buffer import SubscriptionBuffer
 
 from haptic_poop_drop_checker import HapticPoopDropChecker
 
-RESENSE_TIMEOUT = 10.0
-WORKING_DIST_FROM_POOP = 0.58 #0.65  #0.55
-STAGE1_OFFSET = 0.15
+
+#RESENSE_TIMEOUT = 10.0
+#WORKING_DIST_FROM_POOP = 0.58 #0.65  #0.55
+#STAGE1_OFFSET = 0.15
+
+# These are radiuses from the robot's position:
+WORK_DIST = 0.4
+MAX_WORK_DIST = 0.8
 
 
 class Scooper():
@@ -64,13 +71,13 @@ class Scooper():
 
     def tuck(self):
         self._scooper(action='tuck')     
-    
-def go_to_scoop_poop_at(base, poop_x_map, poop_y_map, offset):
-    base_x = base.get_x_map()
-    base_y = base.get_y_map()
-    x, y, yaw = calc_work_x_y_yaw(base_x, base_y, poop_x_map, poop_y_map, offset)
-    rospy.logerr("Calling move base.")
-    return base.go_to(x, y, yaw)
+
+#def go_to_scoop_poop_at(base, poop_x_map, poop_y_map, offset):
+#    base_x = base.get_x_map()
+#    base_y = base.get_y_map()
+#    x, y, yaw = calc_work_x_y_yaw(base_x, base_y, poop_x_map, poop_y_map, offset)
+#    rospy.logerr("Calling move base.")
+#    return base.go_to(x, y, yaw)
 
 
 """
@@ -92,51 +99,92 @@ def current_position(self):
 ##    base.go_to_start()
 
 
+# Distance from the dirty table that the robot should try to get to drop off
+# objects.
+DIRTY_TABLE_WORK_DIST = 0.5
+
 # To start with, we won't try to find free space on the dirty table to put
 # object onto. We'll just hold the obj DIRTY_DROP_HEIGHT over the middle of the
 # dirty table and let go.
 DIRTY_DROP_HEIGHT = 0.1
 
 
-def clean_table_v1(base, head, carrier):
-    """Bring items 1 at a time to the dirty table."""
-    eating_table_corners = perception.eating_table_corners()
-    loginfo("Found eating table with corners " + eating_table_corners)
-    dirty_table_center = perception.dirty_table_center()
-    loginfo("Found dirty table with center " + dirty_table_center)
-    base_pose = plan_examine_surface(base.get_pose(), eating_table_corners)
-    loginfo("Moving to %s to examine the eating table better." % base_pose)
-    base.go_to_pose(base_pose)
-    objs = perception.objs_on_surface(eating_table_corners)
-    loginfo("Found dirty objects on table: " + objs)
+def clean_table_v1():
+    """Simple cleanup algorithm which makes various assumptions and brings
+    items 1 at a time to the dirty table.
+
+    """
+    # This assumes that perception will be smart enough to remember the most
+    # accurate info it's seen. If it's not, this should be modified to only
+    # call perception when near the target.
+    clean_table_corners, objs = prepare_to_clean_table()
     while len(objs) > 0:
-        pick_ups = plan_pickups(base_pose, objs)
-        loginfo("Decided on a pickup plan: " + pick_ups)
-        pick_up_pose = pick_ups[0][0]
-        loginfo("Moving to the first pickup point: " + pick_up_pose)
-        base.go_to_pose(pick_up_pose)
         objs = perception.objs_on_surface(eating_table_corners)
-        objs_with_dists = []
-        for obj in objs:
-            dist = dist_between(obj.pose.x, obj.pose.y, base_pose.x,
-                                base_pose.y)
-            objs_with_dists.append((obj, dist))
-        def get_dist(obj_with_dist):
-            return obj_with_dist[1]
-        objs_with_dists.sort(key=get_dist)
-        loginfo("Updated list of dirty objects on the table: " +
-                objs_with_dists)
-        loginfo("Picking up the nearest one.")
-        carrier.pick_up(objs_with_dists[0][0], carrier.LEFT_HAND)
-        drop_off_pose = find_drop_off_pose(base_pose, dirty_table_center)
-        loginfo("Decided on a drop off pose of %s. Going there." %
-                drop_off_pose)
-        base.go_to_pose(drop_off_pose)
+        closest_obj = find_closest_obj(objs)
+        get_within_working_dist(closest_obj)
+        carrier.pick_up(closest_obj, carrier.LEFT_HAND)
+        go_to_dirty_table()
         loginfo("For now, dropping stuff above the dirty table.")
         drop_position = MapPosition(dirty_table_center.x, dirty_table_center.y,
                                     dirty_table_center.z + DIRTY_DROP_HEIGHT)
         carrier.put_down_obj_at(drop_position, carrier.LEFT_HAND)
     loginfo("Done clearing the eating table.")
+
+
+def prepare_to_clean_table():
+    """Moves the robot to the eating table and returns the table corners and a
+    list of objects on the table.
+    
+    """
+    eating_table_corners = perception.eating_table_corners()
+    loginfo("Found eating table with corners " + eating_table_corners)
+    examine_pose = plan_examine_surface(base.get_pose(), eating_table_corners)
+    loginfo("Moving to %s to examine the eating table better." % base_pose)
+    base.go_to_pose(examine_pose)
+    eating_table_corners = perception.eating_table_corners()
+    loginfo("Reexamined eating table. Found corners: " + eating_table_corners)
+    objs = perception.objs_on_surface(eating_table_corners)
+    loginfo("Found dirty objects on table: " + objs)
+    return table_corners, objs
+
+
+def find_closest_obj(objs):
+    if len(objs) == 0:
+        raise ValueError("Can't find closest obj without any objs")
+    objs_with_dists = []
+    for obj in objs:
+        dist = dist_between(obj.pose, base.get_pose())
+        objs_with_dists.append((obj, dist))
+    def get_dist(obj_with_dist):
+        return obj_with_dist[1]
+    objs_with_dists.sort(key=get_dist)
+    loginfo("Objects and their distances: " + objs_with_dists)
+    return objs_with_dists[0]
+
+
+def get_within_working_dist(obj):
+    if dist_between(base.get_pose(), obj.pose) <= MAX_WORK_DIST:
+        loginfo("Already within working dist of: " + obj)
+        return
+    desired_pose = calc_work_pose(base.get_pose(), obj.pose, WORK_DIST)
+    dest_pose = find_nearest_valid_pose(desired_pose)
+    loginfo("Moving to within working dist of: " + obj)
+    base.go_to_pose(dest_pose)
+
+
+def go_to_dirty_table():
+    dirty_table_center = perception.dirty_table_center()
+    loginfo("Found dirty table with center " + dirty_table_center)
+    desired_pose = calc_work_pose(base.get_pose(), dirty_table_center,
+                                  WORK_DIST)
+    dest_pose = find_nearest_valid_pose(desired_pose)
+    loginfo("Decided on a drop off pose of %s. Going there." % dest_pose)
+    base.go_to_pose(dest_pose)
+
+
+def find_nearest_valid_pose(pose):
+    # TODO Sachin
+    return pose
 
 
 def main():

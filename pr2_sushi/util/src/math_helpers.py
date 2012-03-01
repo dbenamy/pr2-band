@@ -1,7 +1,23 @@
 from math import sqrt
 
 
-def dist_between(x1, y1, x2, y2):
+def dist_between(*args):
+    """Call as dist_between(position1, position2) or
+    dist_between(x1, y1, x2, y2).
+    
+    """
+    if len(args) == 2:
+        return dist_between_2(*args)
+    elif len(args) == 4:
+        return dist_between_4(*args)
+    else:
+        raise ValueError("Invalid number of arguments")
+
+
+def dist_between_2(pos1, pos2):
+    return dist_between_4(pos1.x, pos1.y, pos2.x, pos2.y)
+    
+def dist_between_4(x1, y1, x2, y2):
     return sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 
@@ -31,7 +47,7 @@ def point_inside_polygon(point, poly):
 
 def calc_work_x_y_yaw(base_x_map, base_y_map, target_x_map, target_y_map, working_dist):
     """Given the base position, a target object position, and the distance to
-    be from the target to work on it,	computes the nearest position and yaw for
+    be from the target to work on it, computes the nearest position and yaw for
     the base which will put it at that working distance from the target.
     Assumes there are no obstacles.
     
@@ -61,6 +77,17 @@ def calc_work_x_y_yaw(base_x_map, base_y_map, target_x_map, target_y_map, workin
     return w_x, w_y, w_yaw
 
 
+def calc_work_pose(base, obj, working_dist):
+    """Same as calc_work_x_y_yaw but takes and returns MapPoses."""
+#    if not issubtype(base.__class__, MapVal):
+#        raise TypeError()
+#    if not issubtype(obj.__class__, MapVal):
+#        raise TypeError()
+    x, y, yaw = calc_work_x_y_yaw(base.x.val, base.y.val, target.x.val,
+                                  target.y.val, working_dist)
+    return MapPose(x, y, 0, 0, 0, yaw)
+
+    
 def calc_point_along_line(x1, y1, x2, y2, dist):
     """Returns a point on the line through point1 and point2 which is dist
     away from point 2 in the direction away from point 1. For example,

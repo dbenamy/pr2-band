@@ -3,36 +3,33 @@ from collections import namedtuple
 
 class MapFrameInt:
     """MapFrameInt acts more or less like an int, but represents a number in
-    the map frame and can only be used automatically with other MapFrameInts.
+    the map frame. Its purpose is to try to prevent mixing coordinate frames.
     
     """
     def __init__(self, val=None):
         self.val = val
         
     def __add__(self, other):
-        self._check_type(other)
-        return MapFrameInt(self.val + other.val)
-        
-    def __sub__(self, other):
-        self._check_type(other)
-        return MapFrameInt(self.val - other.val)
-        
-    def __mul__(self, other):
-        self._check_type(other)
-        return MapFrameInt(self.val * other.val)
-        
-    def __div__(self, other):
-        self._check_type(other)
-        return MapFrameInt(self.val / other.val)
-        
-    def __mod__(self, other):
-        self._check_type(other)
-        return MapFrameInt(self.val % other.val)
-    
-    def _check_type(self, other):
-        if not issubclass(other.__class__, MapFrameInt):
+        """You can add a MapFrameInt to an int and get an MapFrameInt."""
+        if not issubclass(other.__class__, int):
             raise TypeError("Invalid computation with non-MapFrameInt")
+        return MapFrameInt(self.val + other)
     
+    def __radd__(self, other):
+        return self + other
+    
+    def __sub__(self, other):
+        """MapFrameInt - MapFrameInt -> int
+        MapFrameInt - int -> MapFrameInt
+        
+        """
+        if issubclass(other.__class__, MapFrameInt):
+            return self.val - other.val
+        if issubclass(other.__class__, int):
+            return MapFrameInt(self.val - other)
+        else:
+            raise TypeError("Invalid computation with non-MapFrameInt")
+        
     def __repr__(self):
         return 'MapFrameType(%s)' % self.val
 
