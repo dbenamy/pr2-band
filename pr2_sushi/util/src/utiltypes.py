@@ -53,6 +53,17 @@ class MapPose:
         self.yaw = MapFrameInt(yaw)
 
 
+class ObjPose:
+    """A pose in some object's frame."""
+    pass # TODO
+
+
+class BasePose:
+    """A pose in the base frame."""
+    pass # TODO
+
+
+
 # An Obj is a physical object in the world. We may need to add more fields.
 # A position of 0. 0. 0 should be near the center of the object.
 Obj = namedtuple(type, pose)

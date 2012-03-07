@@ -103,3 +103,17 @@ def calc_point_along_line(x1, y1, x2, y2, dist):
     unit_vector = (one_to_two_vector[0] / magnitude, one_to_two_vector[1] / magnitude)
     dist_vector = (dist * unit_vector[0], dist * unit_vector[1])
     return (x2 + dist_vector[0], y2 + dist_vector[1])
+
+
+def pose_obj_to_map(obj, pose):
+    """Converts pose which is in the object's frame to the map frame."""
+    raise NotImplemented()
+    """
+    def current_position(self):
+        self.transformer.waitForTransform('map', 'base_footprint', Time.now())
+        base_in_base = PointStamped()
+        base_in_base.header.frame_id = 'base_footprint'
+        base_in_base.header.stamp = Time.now()
+        base_in_map = transformer.transformPoint('map', base_in_base)
+        return (current_point.point.x, current_point.point.y)
+    """

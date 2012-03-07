@@ -21,8 +21,8 @@ from util.utiltypes import MapPose
 
 
 class Base():
-    # TODO See if this can use SubscriptionBuffer to always be able to get
-    # the current base pose instead of pose_gossip to simplify things.
+    # TODO See if this can use SubscriptionBuffer instead of pose_gossip to
+    # simplify things.
     
     def __init__(self, start_x, start_y, start_yaw):
         self.initial_pose_pub = rospy.Publisher('initialpose',
