@@ -1,0 +1,8 @@
+- BOWL_1:
+  pregraspPoseObj: "0, 0, 0, 0, 0, 0"
+  graspPoseObj: "0, 0, 0, 0, 0, 0"
+  carryPoseBase: "0, 0, 0, 0, 0, 0"
+- GLASS_1:
+  pregraspPoseObj: "0, 0, 0, 0, 0, 0"
+  graspPoseObj: "0, 0, 0, 0, 0, 0"
+  carryPoseBase: "0, 0, 0, 0, 0, 0"

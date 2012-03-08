@@ -7,12 +7,15 @@
 
 
 def get_obj_type_from_ar_id(ar_id):
+    # TODO read from armarkers.yaml
     pass
 
 
 def get_pregrasp_poses(type):
+    # TODO read from yaml file
     pass
 
 
 def get_grasp_poses(type):
+    # TODO read from yaml file
     pass
