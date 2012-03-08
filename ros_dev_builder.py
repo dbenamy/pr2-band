@@ -8,6 +8,7 @@ import subprocess
 import sys
 from time import sleep
 
+
 def usage():
     print "ros_dev_builder.py [--debug] <stack or package dir>"
     print ""
@@ -18,6 +19,7 @@ def usage():
     print ""
     print "You should set up your ROS launch files to respawn nodes that die"
     print "so the new executable gets run when the old one is killed."
+
 
 def main():
     print "" # Makes it easier to read output
@@ -63,6 +65,7 @@ def main():
         if not changed_sources and not changed_executables:
             sleep(1)
 
+
 def scan_files(top_dir, file_db):
     changed_sources = []
     changed_executables = []
@@ -83,6 +86,7 @@ def scan_files(top_dir, file_db):
                 changed_sources.append(path)
     return changed_sources, changed_executables
 
+
 def make_which_builds(path, watch_dir):
     debug("Looking for Makefile which builds %s." % path)
     orig_path = copy(path)
@@ -95,8 +99,10 @@ def make_which_builds(path, watch_dir):
             return to_check
     raise Exception("Can't find Makefile to build %s." % orig_path)
 
+
 if __name__ == '__main__':
     main()
+
 
 """
 You can set up a test package structure by running the following.
