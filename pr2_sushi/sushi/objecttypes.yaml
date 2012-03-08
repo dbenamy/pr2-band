@@ -1,8 +1,37 @@
-- BOWL_1:
-  pregraspPoseObj: "0, 0, 0, 0, 0, 0"
-  graspPoseObj: "0, 0, 0, 0, 0, 0"
-  carryPoseBase: "0, 0, 0, 0, 0, 0"
-- GLASS_1:
-  pregraspPoseObj: "0, 0, 0, 0, 0, 0"
-  graspPoseObj: "0, 0, 0, 0, 0, 0"
-  carryPoseBase: "0, 0, 0, 0, 0, 0"
+# All object use the TODO hand rule, like the map frame.
+# If the object is in the position it would be in when set and you're looking
+# from the seat near the setting, positive x is to the right, positive y is
+# "forward", and positive z is up.
+# A roll of 0 means point along -z (down). TODO check
+# A pitch of 0 means point along -z (down). TODO check
+# A yaw of 0 means point along +x. TODO check
+
+# With a grasp pose, roll and pitch are the orientation that the gripper tip
+# should point to. Yaw is trickier. We'll define it so a yaw of 0 is the
+# orientation that the thumb of the gripper should point to.
+
+# Grasp poses don't describe enough to know how to grasp. We don't know what the
+# wrist orientation should be. Grasp surfaces should solve this. The first 2
+# points of a grasp surface describe the line that the gripper should surround.
+
+# BOWL_1's origin is middle of the bottom of the bowl where it rests on a
+# surface.
+BOWL_1:
+  graspPoses:
+    - pregraspPoseObj: "0, 0.05, 0.05, 0, 0, PI / 2"
+      graspPoseObj: "0, 0.05, 0.04, 0, 0, PI / 2"
+    - pregraspPoseObj: "0.05, 0, 0.05, 0, 0, 0"
+      graspPoseObj: "0.05, 0, 0.04, 0, 0, 0"
+    - pregraspPoseObj: "0, -0.05, 0.05, 0, 0, PI / 2"
+      graspPoseObj: "0, -0.05, 0.04, 0, 0, PI / 2"
+    - pregraspPoseObj: "-0.05, 0, 0.05, 0, 0, 0"
+      graspPoseObj: "-0.05, 0, 0.04, 0, 0, 0"
+  graspSurfaces:
+    - pregraspSurfaceObj:
+        - "0.01, 0.05, 0.05"
+        - "-0.01, 0.05, 0.05"
+        - "0, 0.05, 0.04"
+      graspSurfaceObj:
+        - "0.01, 0.05, 0.04"
+        - "-0.01, 0.05, 0.04"
+        - "0, 0.05, 0.03"
